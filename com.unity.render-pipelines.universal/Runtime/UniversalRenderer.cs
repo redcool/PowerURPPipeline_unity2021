@@ -778,9 +778,7 @@ namespace UnityEngine.Rendering.Universal
 
 
             bool hasCaptureActions = renderingData.cameraData.captureActions != null && lastCameraInTheStack;
-            bool applyFinalPostProcessing = anyPostProcessing && lastCameraInTheStack &&
-                (renderingData.cameraData.exData.enableFSR ||
-                renderingData.cameraData.antialiasing == AntialiasingMode.FastApproximateAntialiasing);
+            bool applyFinalPostProcessing = IsApplyFinalPostProcessing(ref renderingData, anyPostProcessing, lastCameraInTheStack);
 
             // When post-processing is enabled we can use the stack to resolve rendering to camera target (screen or RT).
             // However when there are render passes executing after post we avoid resolving to screen so rendering continues (before sRGBConvertion etc)
@@ -804,7 +802,7 @@ namespace UnityEngine.Rendering.Universal
                 // Do FXAA or any other final post-processing effect that might need to run after AA.
                 if (applyFinalPostProcessing)
                 {
-                    finalPostProcessPass.SetupFinalPass(sourceForFinalPass, true,cameraTargetDescriptor);
+                    finalPostProcessPass.SetupFinalPass(sourceForFinalPass, true, cameraTargetDescriptor);
                     EnqueuePass(finalPostProcessPass);
                 }
 
@@ -865,6 +863,8 @@ namespace UnityEngine.Rendering.Universal
 #endif
             SetupEx(context, ref renderingData);
         }
+
+
 
         /// <inheritdoc />
         public override void SetupLights(ScriptableRenderContext context, ref RenderingData renderingData)

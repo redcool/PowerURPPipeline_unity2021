@@ -11,6 +11,8 @@ namespace UnityEngine.Rendering.Universal.Internal
         ComputeBuffer easuCB;
         ComputeBuffer rcasCB;
 
+        ProfilingSampler fsrSampler = new ProfilingSampler(FsrShaderConstants.FSR_PROFILE_ID);
+
         void CleanupFSRBuffers()
         {
             if (easuCB != null)
@@ -58,18 +60,20 @@ namespace UnityEngine.Rendering.Universal.Internal
             return desc;
         }
 
-        void RenderFSR(CommandBuffer cmd, ref CameraData cameraData, Material material, RenderBufferLoadAction colorLoadAction, RenderTargetHandle cameraTargetHandle)
+        bool TryRenderFSR(CommandBuffer cmd, ref CameraData cameraData, Material material, RenderBufferLoadAction colorLoadAction, RenderTargetHandle cameraTargetHandle)
         {
+            if (! cameraData.exData.enableFSR)
+                return false;
+
             RenderTargetIdentifier cameraTarget = (cameraData.targetTexture != null) ? new RenderTargetIdentifier(cameraData.targetTexture) : cameraTargetHandle.Identifier();
             cmd.GetTemporaryRT(FsrShaderConstants._EASUInputTexture, GetCompatibleDescriptor());
-
-
             cmd.SetRenderTarget(FsrShaderConstants._EASUInputTexture, colorLoadAction, RenderBufferStoreAction.Store, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.DontCare);
             cmd.SetViewProjectionMatrices(Matrix4x4.identity, Matrix4x4.identity);
             cmd.DrawMesh(RenderingUtils.fullscreenMesh, Matrix4x4.identity, material);
             cmd.SetViewProjectionMatrices(cameraData.camera.worldToCameraMatrix, cameraData.camera.projectionMatrix);
 
             DoFSR(cmd, ref cameraData, cameraTarget);
+            return true;
         }
 
         #region EASU
@@ -147,8 +151,8 @@ namespace UnityEngine.Rendering.Universal.Internal
         {
             bool needs_convert_to_srgb = !(cameraData.isHdrEnabled || QualitySettings.activeColorSpace == ColorSpace.Gamma);
             needs_convert_to_srgb = needs_convert_to_srgb || cameraData.exData.NeedLinearToSRGB();
-
-            using (new ProfilingScope(cmd, ProfilingSampler.Get(URPProfileId.FSR)))
+            
+            using (new ProfilingScope(cmd, fsrSampler))
             {
                 EdgeAdaptiveSpatialUpsampling(cmd, cameraData, needs_convert_to_srgb);
                 //RobustContrastAdaptiveSharpening(cmd, cameraData, needs_convert_to_srgb);
@@ -179,6 +183,10 @@ namespace UnityEngine.Rendering.Universal.Internal
             public static readonly int _RCASScale = Shader.PropertyToID("_RCASScale");
             public static readonly int _RCASParameters = Shader.PropertyToID("_RCASParameters");
             public static readonly int _RCASOutputTexture = Shader.PropertyToID("_RCASOutputTexture");
+
+            public const string FSR_PROFILE_ID = "FSR";
+            public const string AMD_FSR_MIPMAP_BIAS = "amd_fsr_mipmap_bias";
         }
+
     }
 }

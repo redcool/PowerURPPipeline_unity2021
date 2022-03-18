@@ -1427,11 +1427,8 @@ namespace UnityEngine.Rendering.Universal.Internal
             else
 #endif
             {
-                if (cameraData.exData.enableFSR)
-                {
-                    RenderFSR(cmd, ref cameraData, material, colorLoadAction, cameraTargetHandle);
+                if (TryRenderFSR(cmd, ref cameraData, material, colorLoadAction, cameraTargetHandle))
                     return;
-                }
 
                 // Note: We need to get the cameraData.targetTexture as this will get the targetTexture of the camera stack.
                 // Overlay cameras need to output to the target described in the base camera while doing camera stack.

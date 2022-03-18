@@ -7,28 +7,6 @@ using System.Threading.Tasks;
 namespace UnityEngine.Rendering.Universal
 {
 
-    public struct CameraDataEx
-    {
-        public bool enableFSR;
-        public UniversalAdditionalCameraData.AMDFSR baseCameraAmdFSR;
-        public ColorSpace colorSpaceUsage;
-        public CameraRenderType renderType;
-
-        public bool FsrNeedFinalBlit()
-        {
-            return renderType == CameraRenderType.Base
-                || colorSpaceUsage != ColorSpace.Gamma
-                || QualitySettings.activeColorSpace == ColorSpace.Gamma;
-                ;
-        }
-
-        public bool NeedLinearToSRGB()
-        {
-            return colorSpaceUsage == ColorSpace.Gamma
-                && QualitySettings.activeColorSpace == ColorSpace.Linear;
-        }
-    }
-
     public partial class UniversalRenderPipeline
     {
         private struct AMDFSRSettings
@@ -49,8 +27,12 @@ namespace UnityEngine.Rendering.Universal
             new AMDFSRSettings(.50f, -1.0f)
         };
 
-
         static void InitialCameraDataEx(UniversalAdditionalCameraData additionalCameraData, ref CameraData cameraData, bool resolveFinalTarget)
+        {
+            InitialCameraDataFsr(additionalCameraData, ref cameraData, resolveFinalTarget);
+        }
+        
+        static void InitialCameraDataFsr(UniversalAdditionalCameraData additionalCameraData, ref CameraData cameraData, bool resolveFinalTarget)
         {
             if (additionalCameraData != null)
             {
@@ -58,11 +40,11 @@ namespace UnityEngine.Rendering.Universal
                 cameraData.exData.renderType = additionalCameraData.renderType;
 
                 if (cameraData.renderType == CameraRenderType.Base)
-                    cameraData.exData.baseCameraAmdFSR = additionalCameraData.renderPostProcessing?additionalCameraData.amdFSR : UniversalAdditionalCameraData.AMDFSR.Disabled;
+                    cameraData.exData.baseCameraAmdFSR = additionalCameraData.renderPostProcessing ? additionalCameraData.amdFSR : UniversalAdditionalCameraData.AMDFSR.Disabled;
 
                 if (resolveFinalTarget && cameraData.exData.baseCameraAmdFSR != UniversalAdditionalCameraData.AMDFSR.Disabled)
                 {
-                    asset.msaaSampleCount = 8; // NOTE! You can also use some other AA solutions.
+                    //asset.msaaSampleCount = 8; // NOTE! You can also use some other AA solutions.
                     var amdFSRSetting = amdFSRSettingsPreset[(int)cameraData.exData.baseCameraAmdFSR];
                     cameraData.renderScale = amdFSRSetting.m_RenderScale;
                     cameraData.exData.enableFSR = true;

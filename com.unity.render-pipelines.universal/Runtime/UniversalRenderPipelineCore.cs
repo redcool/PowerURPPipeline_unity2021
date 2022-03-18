@@ -845,8 +845,6 @@ namespace UnityEngine.Rendering.Universal
         DrawOpaqueObjects,
         DrawTransparentObjects,
 
-        FSR,
-
         // RenderObjectsPass
         //RenderObjects,
 

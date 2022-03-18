@@ -14,7 +14,29 @@ namespace UnityEngine.Rendering.Universal
 
         BlitPassEx gammaPrePass, gammaPostPass;
 
+        /// <summary>
+        /// 
+        /// Inject to end of UniversalRenderer's ctor
+        /// </summary>
+        /// <param name="data"></param>
         public void InitEx(UniversalRendererData data)
+        {
+            InitCameraGammaRendering(data);
+        }
+
+        public void SetupEx(ScriptableRenderContext context, ref RenderingData renderingData)
+        {
+            SetupCameraGammaRendering(context, ref renderingData);
+        }
+
+
+        public void DisposeEx()
+        {
+            gammaPostPass.Cleanup();
+        }
+
+
+        public void InitCameraGammaRendering(UniversalRendererData data)
         {
             gammaPrePass = new BlitPassEx(nameof(gammaPrePass),RenderPassEvent.AfterRendering+10, m_BlitMaterial);
 
@@ -22,7 +44,7 @@ namespace UnityEngine.Rendering.Universal
             gammaPostPass = new BlitPassEx(nameof(gammaPostPass),RenderPassEvent.AfterRendering+20, m_BlitMaterial);
         }
 
-        public void SetupEx(ScriptableRenderContext context, ref RenderingData renderingData)
+        public void SetupCameraGammaRendering(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             ref var cameraData = ref renderingData.cameraData;
 
@@ -50,12 +72,15 @@ namespace UnityEngine.Rendering.Universal
                 gammaPostPass.SetupPostPass(cameraData.cameraTargetDescriptor, m_ActiveCameraColorAttachment);
                 EnqueuePass(gammaPostPass);
             }
-        }
+        } 
 
 
-        public void DisposeEx()
+
+        public static bool IsApplyFinalPostProcessing(ref RenderingData renderingData, bool anyPostProcessing, bool lastCameraInTheStack)
         {
-            gammaPostPass.Cleanup();
+            return anyPostProcessing && lastCameraInTheStack &&
+                (renderingData.cameraData.exData.enableFSR || renderingData.cameraData.antialiasing == AntialiasingMode.FastApproximateAntialiasing)
+                ;
         }
     }
 
