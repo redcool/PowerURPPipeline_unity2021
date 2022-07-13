@@ -79,8 +79,9 @@ namespace UnityEngine.Rendering.Universal
         public static bool IsApplyFinalPostProcessing(ref RenderingData renderingData, bool anyPostProcessing, bool lastCameraInTheStack)
         {
             return anyPostProcessing && lastCameraInTheStack &&
-                (renderingData.cameraData.exData.enableFSR || renderingData.cameraData.antialiasing == AntialiasingMode.FastApproximateAntialiasing)
-                ;
+                ((renderingData.cameraData.exData.enableFSR || renderingData.cameraData.antialiasing == AntialiasingMode.FastApproximateAntialiasing) ||
+                 ((renderingData.cameraData.imageScalingMode == ImageScalingMode.Upscaling) && (renderingData.cameraData.upscalingFilter != ImageUpscalingFilter.Linear)));
+
         }
     }
 
