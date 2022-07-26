@@ -52,8 +52,9 @@ namespace UnityEngine.Rendering.Universal
                 //cameraData.exData.colorSpaceUsage == ColorSpace.Gamma &&
                 cameraData.renderType == CameraRenderType.Overlay
                 ;
+            var isSceneCamera = cameraData.isSceneViewCamera;
 
-            if (isUICamera)
+            if (isUICamera || isSceneCamera)
             {
                 drawUIObjectPass.Setup(cameraData.camera.cullingMask);
                 drawUIObjectPass.RenderTarget = cameraData.exData.enableFSR ? PostProcessPass.FsrShaderConstants._EASUOutputTexture : ShaderPropertyId._FULLSIZE_GAMMA_TEX;
