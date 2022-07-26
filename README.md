@@ -26,5 +26,11 @@ git checkout 12.1.5
 
     set UIObject's layer is UI
     URP ForwardRendererData Transparent Layer Mask remove UI(otherwist will render ui twice)
+
+    if gamma ui not work in urp?
+        1 copy Shaders\UI\UI-Default.shader to project Assets folder
+        2 relanuch project.
+
     done
+
 
