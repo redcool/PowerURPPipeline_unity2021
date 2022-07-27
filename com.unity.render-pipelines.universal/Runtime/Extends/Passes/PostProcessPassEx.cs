@@ -150,18 +150,25 @@ namespace UnityEngine.Rendering.Universal.Internal
         void DoFSR(CommandBuffer cmd, ref CameraData cameraData, RenderTargetIdentifier dst)
         {
             bool needs_convert_to_srgb = !(cameraData.isHdrEnabled || QualitySettings.activeColorSpace == ColorSpace.Gamma);
-            needs_convert_to_srgb = needs_convert_to_srgb || cameraData.exData.NeedLinearToSRGB();
+            //needs_convert_to_srgb = needs_convert_to_srgb || cameraData.exData.NeedLinearToSRGB();
             
             using (new ProfilingScope(cmd, fsrSampler))
             {
+                if (cameraData.exData.NeedLinearToSRGB())
+                {
+                    cmd.EnableShaderKeyword(ShaderKeywordStrings.LinearToSRGBConversion);
+                }
                 EdgeAdaptiveSpatialUpsampling(cmd, cameraData, needs_convert_to_srgb);
                 //RobustContrastAdaptiveSharpening(cmd, cameraData, needs_convert_to_srgb);
             }
             // gamma camera need continue rendering ui.
             if (cameraData.exData.FsrNeedFinalBlit())
             {
-                cmd.Blit(FsrShaderConstants._EASUOutputTexture, dst);
-                //cmd.Blit(FsrShaderConstants._RCASOutputTexture, dst);
+                using (new ProfilingScope(cmd, new ProfilingSampler("fsrFinalBlit")))
+                {
+                    cmd.Blit(FsrShaderConstants._EASUOutputTexture, dst);
+                    //cmd.Blit(FsrShaderConstants._RCASOutputTexture, dst);
+                }
             }
         }
         #endregion
