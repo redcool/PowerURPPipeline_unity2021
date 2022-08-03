@@ -6,12 +6,12 @@ Copy folder "com.unity.render-pipelines.universal" to Packages
 ==========================Basic:
 
 develop version:
-Unity2021.2.14, urp12.1.5
+Unity2021.2.14, urp12.1.7
 
 git clone from this:
 https://github.com/Unity-Technologies/Graphics.git
 
-git checkout 12.1.5
+git checkout 12.1.7
 
 
 ==========================Features
