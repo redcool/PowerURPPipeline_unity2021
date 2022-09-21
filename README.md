@@ -19,14 +19,18 @@ git checkout 12.1.7
     MainCamera check Rendering/PostProcessing
     AMD FRS 1.0, select a item.
 
-2 Camera rendering in gamma space
-    add new Camera
-    check Redering/CullingMask is UI
-    check Rendering/Color Space Usage to gamma
+2 Camera rendering in gamma space for linear space project.
+    1 Edit/ProjectSettings/Player/Rendering/ Color Space*
+        select Linear
+    
+    2 add new Camera
+        check Redering/CullingMask is UI
+        check Rendering/Color Space Usage to gamma
 
-    set UIObject's layer is UI
-    URP ForwardRendererData Transparent Layer Mask remove UI(otherwist will render ui twice)
+    3 set UIObject's layer is UI
+    4 URP ForwardRendererData Transparent Layer Mask remove UI(otherwist will render ui twice)
 
+FAQ:
     if gamma ui not work in urp?
         1 copy Shaders\UI\UI-Default.shader to project Assets folder
         2 relanuch project.
