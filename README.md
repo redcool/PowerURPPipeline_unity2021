@@ -13,11 +13,12 @@ https://github.com/Unity-Technologies/Graphics.git
 
 git checkout 12.1.7
 
-
+v1.0.1
 ==========================Features
 1 Amd Fsr
     MainCamera check Rendering/PostProcessing
     AMD FRS 1.0, select a item.
+
 
 2 Camera rendering in gamma space for linear space project.
     1 Edit/ProjectSettings/Player/Rendering/ Color Space*
@@ -31,10 +32,16 @@ git checkout 12.1.7
     4 URP ForwardRendererData Transparent Layer Mask remove UI(otherwist will render ui twice)
 
 FAQ:
-    if gamma ui not work in urp?
+    1 if gamma ui not work in urp?
         1 copy Shaders\UI\UI-Default.shader to project Assets folder
         2 relanuch project.
 
     done
-
+    2 amdfsr device types
+        1 anroid vulkan
+        2 pc 
+        3 metal : not check yet
+    3 gamma ui
+        1 android vulkan,pc
+        2 gles3, blit one more time than vulkan
 
