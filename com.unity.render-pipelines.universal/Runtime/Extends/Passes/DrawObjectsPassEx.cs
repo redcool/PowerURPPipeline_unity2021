@@ -93,9 +93,11 @@ namespace UnityEngine.Rendering.Universal.Internal
                     : new Vector4(flipSign, 0.0f, 1.0f, 1.0f);
                 cmd.SetGlobalVector(ShaderPropertyId.scaleBiasRt, scaleBias);
 
-                if (isReassignTarget)
+                // urp rendering in es3, only use backbuffer
+                if (isReassignTarget)// && SystemInfo.graphicsDeviceType != GraphicsDeviceType.OpenGLES3
                 {
                     CoreUtils.SetRenderTarget(cmd, m_NewTarget);
+
                 }
 
                 if(renderingData.cameraData.exData.colorSpaceUsage == ColorSpace.Gamma)
@@ -118,7 +120,6 @@ namespace UnityEngine.Rendering.Universal.Internal
                     filterSettings.layerMask = -1;
                 }
 #endif
-
                 context.DrawRenderers(renderingData.cullResults, ref drawSettings, ref filterSettings, ref m_RenderStateBlock);
 
                 // Render objects that did not match any shader pass with error shader

@@ -38,42 +38,55 @@ namespace UnityEngine.Rendering.Universal
 
         public void InitCameraGammaRendering(UniversalRendererData data)
         {
-            gammaPrePass = new BlitPassEx(nameof(gammaPrePass),RenderPassEvent.AfterRendering+10, m_BlitMaterial);
+            // remove ui layer
+            //int uiLayerId = LayerMask.GetMask("UI");
+            //if ((data.transparentLayerMask & uiLayerId) !=0)
+            //    data.transparentLayerMask &= ~uiLayerId;
+
+            gammaPrePass = new BlitPassEx(nameof(gammaPrePass), RenderPassEvent.AfterRendering+10, m_BlitMaterial);
 
             drawUIObjectPass = new DrawObjectsPassEx(nameof(drawUIObjectPass), false, RenderPassEvent.AfterRendering+11, RenderQueueRange.transparent, LayerMask.GetMask("UI"), m_DefaultStencilState, data.defaultStencilState.stencilReference);
-            gammaPostPass = new BlitPassEx(nameof(gammaPostPass),RenderPassEvent.AfterRendering+20, m_BlitMaterial);
+            gammaPostPass = new BlitPassEx(nameof(gammaPostPass), RenderPassEvent.AfterRendering+20, m_BlitMaterial);
+        }
+
+        public bool IsUICamera(ref CameraData cameraData)
+        {
+            var isUICamera = QualitySettings.activeColorSpace == ColorSpace.Linear &&
+                cameraData.exData.colorSpaceUsage == ColorSpace.Gamma &&
+                cameraData.renderType == CameraRenderType.Overlay
+                ;
+            var isSceneCamera = cameraData.isSceneViewCamera;
+            return isUICamera || isSceneCamera;
         }
 
         public void SetupCameraGammaRendering(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             ref var cameraData = ref renderingData.cameraData;
+            if (!IsUICamera(ref cameraData))
+                return;
 
-            var isUICamera = QualitySettings.activeColorSpace == ColorSpace.Linear &&
-                //cameraData.exData.colorSpaceUsage == ColorSpace.Gamma &&
-                cameraData.renderType == CameraRenderType.Overlay
-                ;
-            var isSceneCamera = cameraData.isSceneViewCamera;
+            //remove original blit pass
+            DequeuePass(m_FinalBlitPass); // ui cammera use gammaPostPass
 
-            if (isUICamera || isSceneCamera)
-            {
-                drawUIObjectPass.Setup(cameraData.camera.cullingMask);
+            drawUIObjectPass.Setup(cameraData.camera.cullingMask);
+
+            if (SystemInfo.graphicsDeviceType != GraphicsDeviceType.OpenGLES3)
                 drawUIObjectPass.RenderTarget = cameraData.exData.enableFSR ? PostProcessPass.FsrShaderConstants._EASUOutputTexture : ShaderPropertyId._FULLSIZE_GAMMA_TEX;
 
-                EnqueuePass(drawUIObjectPass);
-                
-                //remove original blit pass
-                DequeuePass(m_FinalBlitPass); // ui cammera use gammaPostPass
+            EnqueuePass(drawUIObjectPass);
 
-                if (!cameraData.exData.enableFSR)
-                {
-                    gammaPrePass.SetupPrePass(cameraData.cameraTargetDescriptor, m_ActiveCameraColorAttachment);
-                    EnqueuePass(gammaPrePass);
-                }
-
-                gammaPostPass.SetupPostPass(cameraData.cameraTargetDescriptor, m_ActiveCameraColorAttachment);
-                EnqueuePass(gammaPostPass);
+            if (!cameraData.exData.enableFSR || SystemInfo.graphicsDeviceType == GraphicsDeviceType.OpenGLES3)
+            {
+                var isGenerateGammaTex = !cameraData.exData.enableFSR;
+                var renderTarget = cameraData.exData.enableFSR ? PostProcessPass.FsrShaderConstants._EASUOutputTexture : ShaderPropertyId._FULLSIZE_GAMMA_TEX;
+                gammaPrePass.SetupPrePass(cameraData.cameraTargetDescriptor, m_ActiveCameraColorAttachment, isGenerateGammaTex, renderTarget);
+                EnqueuePass(gammaPrePass);
             }
-        } 
+
+            gammaPostPass.SetupPostPass(cameraData.cameraTargetDescriptor, m_ActiveCameraColorAttachment);
+            EnqueuePass(gammaPostPass);
+
+        }
 
 
 

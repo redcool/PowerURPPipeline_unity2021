@@ -10,16 +10,20 @@ namespace UnityEngine.Rendering.Universal.Internal
     {
 
         public bool isPrePass,isPostPass;
+        public bool isGenerateGammaTex;
+        private RenderTargetIdentifier targetId;
 
         public BlitPassEx(string samplerName, RenderPassEvent evt, Material blitMaterial) : base(evt, blitMaterial)
         {
             base.profilingSampler = new ProfilingSampler(samplerName);
         }
 
-        public void SetupPrePass(RenderTextureDescriptor baseDescriptor, RenderTargetHandle colorHandle)
+        public void SetupPrePass(RenderTextureDescriptor baseDescriptor, RenderTargetHandle colorHandle,bool isGenerateGammaTex,RenderTargetIdentifier targetId)
         {
             m_Source = colorHandle.id;
             isPrePass = true;
+            this.isGenerateGammaTex = isGenerateGammaTex;
+            this.targetId = targetId;
         }
 
         public void SetupPostPass(RenderTextureDescriptor baseDescriptor, RenderTargetHandle colorHandle)
@@ -64,12 +68,27 @@ namespace UnityEngine.Rendering.Universal.Internal
 
                 if (isPrePass)
                 {
-                    cameraTarget = ShaderPropertyId._FULLSIZE_GAMMA_TEX;
+                    cameraTarget = targetId;
 
-                    var desc = cameraData.cameraTargetDescriptor;
-                    desc.width = cameraData.camera.pixelWidth;
-                    desc.height = cameraData.camera.pixelHeight;
-                    cmd.GetTemporaryRT(ShaderPropertyId._FULLSIZE_GAMMA_TEX, desc);
+                    if (isGenerateGammaTex)
+                    {
+                        var desc = cameraData.cameraTargetDescriptor;
+                        desc.width = cameraData.camera.pixelWidth;
+                        desc.height = cameraData.camera.pixelHeight;
+                        cmd.GetTemporaryRT(ShaderPropertyId._FULLSIZE_GAMMA_TEX, desc);
+                        cameraTarget = ShaderPropertyId._FULLSIZE_GAMMA_TEX;
+                    }
+#if UNITY_ANDROID
+                    if(SystemInfo.graphicsDeviceType == GraphicsDeviceType.OpenGLES3)
+                    {
+                        cmd.DisableShaderKeyword(ShaderKeywordStrings.LinearToSRGBConversion);
+                        cmd.DisableShaderKeyword(ShaderKeywordStrings.SRGBToLinearConversion);
+                        RenderingUtils.Blit(cmd, sourceTarget, cameraTarget,m_BlitMaterial);
+
+                        sourceTarget = cameraTarget;
+                        cameraTarget = m_Source;
+                    }
+#endif
 
                     if (needLinearToSRGB)
                     {
@@ -79,7 +98,11 @@ namespace UnityEngine.Rendering.Universal.Internal
 
                 if (isPostPass)
                 {
-                    sourceTarget = cameraData.exData.enableFSR ? PostProcessPass.FsrShaderConstants._EASUOutputTexture : ShaderPropertyId._FULLSIZE_GAMMA_TEX;
+                    //if (SystemInfo.graphicsDeviceType != GraphicsDeviceType.OpenGLES3)
+                    //{
+                    //    sourceTarget = cameraData.exData.enableFSR ? PostProcessPass.FsrShaderConstants._EASUOutputTexture : ShaderPropertyId._FULLSIZE_GAMMA_TEX;
+                    //}
+                    sourceTarget = BuiltinRenderTextureType.CurrentActive;
                     //cameraTarget = (cameraData.targetTexture != null) ? new RenderTargetIdentifier(cameraData.targetTexture) : RenderTargetHandle.GetCameraTarget(cameraData.xr).Identifier();
 
                     if (needLinearToSRGB)
@@ -100,7 +123,6 @@ namespace UnityEngine.Rendering.Universal.Internal
                     cmd.DisableShaderKeyword(ShaderKeywordStrings.SRGBToLinearConversion);
                     cmd.ReleaseTemporaryRT(ShaderPropertyId._FULLSIZE_GAMMA_TEX);
                 }
-
             }
 
             context.ExecuteCommandBuffer(cmd);
