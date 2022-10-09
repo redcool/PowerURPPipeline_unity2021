@@ -14,12 +14,14 @@ https://github.com/Unity-Technologies/Graphics.git
 git checkout 12.1.7
 
 ==========================Updates
+v1.0.1.3
+update UberPost.shader, keep alpha
+
 v1.0.1.2
 fixed version conflict
 fixed posteffect not show in sceneView
 ui gamma flow not satisfy, will show warings 3 times.
 
-v1.0.1
 ==========================Features
 1 Amd Fsr
     MainCamera check Rendering/PostProcessing

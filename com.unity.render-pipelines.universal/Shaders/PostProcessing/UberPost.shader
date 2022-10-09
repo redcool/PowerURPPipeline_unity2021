@@ -121,7 +121,7 @@ Shader "Hidden/Universal Render Pipeline/UberPost"
             float2 uvDistorted = DistortUV(uv);
 
             half3 color = (0.0).xxx;
-
+            half alpha = 1;
             #if _CHROMATIC_ABERRATION
             {
                 // Very fast version of chromatic aberration from HDRP using 3 samples and hardcoded
@@ -130,15 +130,18 @@ Shader "Hidden/Universal Render Pipeline/UberPost"
                 float2 end = uv - coords * dot(coords, coords) * ChromaAmount;
                 float2 delta = (end - uv) / 3.0;
 
-                half r = SAMPLE_TEXTURE2D_X(_SourceTex, sampler_LinearClamp, uvDistorted                ).x;
+                half ra = SAMPLE_TEXTURE2D_X(_SourceTex, sampler_LinearClamp, uvDistorted                ).xw;
                 half g = SAMPLE_TEXTURE2D_X(_SourceTex, sampler_LinearClamp, DistortUV(delta + uv)      ).y;
                 half b = SAMPLE_TEXTURE2D_X(_SourceTex, sampler_LinearClamp, DistortUV(delta * 2.0 + uv)).z;
 
-                color = half3(r, g, b);
+                color = half3(ra.x, g, b);
+                alpha = ra.w;
             }
             #else
             {
-                color = SAMPLE_TEXTURE2D_X(_SourceTex, sampler_LinearClamp, uvDistorted).xyz;
+                half4 c = SAMPLE_TEXTURE2D_X(_SourceTex, sampler_LinearClamp, uvDistorted);
+                color = c.xyz;
+                alpha = c.w;
             }
             #endif
 
@@ -235,7 +238,7 @@ Shader "Hidden/Universal Render Pipeline/UberPost"
             }
             #endif
 
-            return half4(color, 1.0);
+            return half4(color, alpha);
         }
 
     ENDHLSL
