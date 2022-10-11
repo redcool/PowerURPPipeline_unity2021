@@ -84,7 +84,7 @@ namespace UnityEngine.Rendering.Universal.Internal
                         cmd.DisableShaderKeyword(ShaderKeywordStrings.LinearToSRGBConversion);
                         cmd.DisableShaderKeyword(ShaderKeywordStrings.SRGBToLinearConversion);
                         RenderingUtils.Blit(cmd, sourceTarget, cameraTarget,m_BlitMaterial);
-
+                         
                         sourceTarget = cameraTarget;
                         cameraTarget = m_Source;
                     }
@@ -113,7 +113,7 @@ namespace UnityEngine.Rendering.Universal.Internal
                 }
 
                 cmd.SetGlobalTexture(ShaderPropertyId.sourceTex, sourceTarget);
-                cmd.SetRenderTarget(cameraTarget);
+                cmd.SetRenderTarget(cameraTarget,RenderBufferLoadAction.Load,RenderBufferStoreAction.Store, RenderBufferLoadAction.Load, RenderBufferStoreAction.Store);
                 cmd.SetViewProjectionMatrices(Matrix4x4.identity, Matrix4x4.identity);
                 cmd.DrawMesh(RenderingUtils.fullscreenMesh, Matrix4x4.identity, m_BlitMaterial);
                 cmd.SetViewProjectionMatrices(camera.worldToCameraMatrix, camera.projectionMatrix);
