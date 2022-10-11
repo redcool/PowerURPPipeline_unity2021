@@ -130,12 +130,12 @@ Shader "Hidden/Universal Render Pipeline/UberPost"
                 float2 end = uv - coords * dot(coords, coords) * ChromaAmount;
                 float2 delta = (end - uv) / 3.0;
 
-                half ra = SAMPLE_TEXTURE2D_X(_SourceTex, sampler_LinearClamp, uvDistorted                ).xw;
+                half2 ra = SAMPLE_TEXTURE2D_X(_SourceTex, sampler_LinearClamp, uvDistorted                ).xw;
                 half g = SAMPLE_TEXTURE2D_X(_SourceTex, sampler_LinearClamp, DistortUV(delta + uv)      ).y;
                 half b = SAMPLE_TEXTURE2D_X(_SourceTex, sampler_LinearClamp, DistortUV(delta * 2.0 + uv)).z;
 
                 color = half3(ra.x, g, b);
-                alpha = ra.w;
+                alpha = ra.y;
             }
             #else
             {
